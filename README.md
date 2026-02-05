@@ -1,11 +1,4 @@
-# Employee Performance Analysis & Regression Modeling
-![R](https://img.shields.io/badge/Language-R-blue)
-![Data Analysis](https://img.shields.io/badge/Project-Data%20Analysis-orange)
-![Regression](https://img.shields.io/badge/Model-Regression-green)
-![Kaggle](https://img.shields.io/badge/Dataset-Kaggle-lightgrey)
-![Status](https://img.shields.io/badge/Status-Completed-success)
-
-
+<h1 align="center">Employee Performance Analysis & Regression Modeling</h1>
 <p align="center">
   <img src="https://img.shields.io/badge/Language-R-blue" />
   <img src="https://img.shields.io/badge/Project-Data%20Analysis-orange" />
