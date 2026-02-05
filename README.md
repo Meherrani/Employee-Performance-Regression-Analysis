@@ -135,9 +135,10 @@ The low RMSE indicates strong predictive accuracy and generalizability.
 ## How to Reproduce the Analysis
 1. Clone the repository
 2. Download the dataset from Kaggle and place it in the `data/` folder
-3. Open the RMarkdown file in the `notebooks/` folder
-4. Run the analysis sequentially
-5. Knit the document to generate the final report
+3. Open the RMarkdown file in RStudio
+4. Ensure required R libraries are installed
+5. Run the analysis sequentially
+6. Knit the RMarkdown file to generate the final report
 
 ---
 
