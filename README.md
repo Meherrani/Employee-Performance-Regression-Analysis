@@ -38,6 +38,7 @@ The goal of this project is to:
 
 ## Project Structure
 
+```
 Employee-Performance-Regression-Analysis/
 │
 ├── Data/
@@ -52,7 +53,7 @@ Employee-Performance-Regression-Analysis/
 ├── Employee Performance Report.pptx
 ├── R_program Employee Performance.Rmd
 └── README.md
-
+```
 
 ---
 
