@@ -1,4 +1,11 @@
 # Employee Performance Analysis & Regression Modeling
+![R](https://img.shields.io/badge/Language-R-blue)
+![Data Analysis](https://img.shields.io/badge/Project-Data%20Analysis-orange)
+![Regression](https://img.shields.io/badge/Model-Regression-green)
+![Kaggle](https://img.shields.io/badge/Dataset-Kaggle-lightgrey)
+![Status](https://img.shields.io/badge/Status-Completed-success)
+
+
 
 ## Overview
 This project performs an end-to-end HR analytics study using the R programming language to understand and predict employee performance using statistical analysis and regression modeling. The objective is to identify the most influential factors affecting employee performance and build a validated predictive model that can support data-driven HR decision-making.
