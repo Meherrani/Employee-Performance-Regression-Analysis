@@ -38,8 +38,20 @@ The goal of this project is to:
 
 ## Project Structure
 
-
----
+Employee-Performance-Regression-Analysis/
+│
+├── Data/
+│ └── HR_Analytics Data.zip
+│
+├── Visuals/
+│ ├── Box Plot.png
+│ ├── Correlation Plot.png
+│ ├── Histogram After applying transformation.png
+│ └── Scatter plot.png
+│
+├── Employee Performance Report.pptx
+├── R_program Employee Performance.Rmd
+└── README.md
 
 
 ---
