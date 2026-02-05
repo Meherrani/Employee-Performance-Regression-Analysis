@@ -1,0 +1,522 @@
+---
+title: "project"
+output:
+  word_document: default
+  html_document: default
+date: "2023-11-04"
+---
+
+
+```{r}
+library(dplyr)
+library(skimr)
+library(corrplot)
+library(leaps)
+library(psych)
+library(QuantPsyc)
+library(fastDummies)
+library(dummy)
+library(car)
+library(ggplot2)
+library(RColorBrewer)
+
+```
+
+```{r}
+df <- read.csv("employee_data.csv", header = T)
+
+```
+
+```{r}
+glimpse(df)
+
+```
+
+```{r}
+str(df)
+
+```
+
+```{r}
+summary(df)
+
+```
+
+```{r}
+uniqueVal = function(x) {return (unique(x))}
+apply(df[, -1], 2, uniqueVal)
+```
+
+```{r}
+skim(df) 
+```
+
+```{r}
+missing_empty = function (x) {return (sum(x =='' | is.na(x)))}
+apply(df,2, missing_empty)
+```
+
+```{r}
+dfpyr <- df %>%
+  filter(is.na(previous_year_rating))
+lapply(dfpyr[, -1], uniqueVal)
+
+```
+```{r}
+df[["previous_year_rating"]][is.na(df$previous_year_rating)] <- 0
+unique(df$previous_year_rating)
+
+```
+```{r}
+dfedu <- df %>%
+  filter(education == '')
+lapply(dfedu[, -1], uniqueVal)
+```
+
+
+```{r}
+df = df[df$education != "", ]
+unique(df$education)
+
+```
+
+
+```{r}
+df <- df %>%
+  rename(Employee_id = employee_id,
+         Department = department,
+         Region = region,
+         Education = education,
+         Gender = gender,
+         Recruitment_channel = recruitment_channel,
+         No_of_trainings = no_of_trainings,
+         Age = age,
+         Previous_year_rating = previous_year_rating,
+         Length_of_service = length_of_service,
+         KPIs_met_80 = KPIs_met_more_than_80,
+         Awards_won = awards_won,
+         Average_training_score = avg_training_score
+         )
+glimpse(df)
+
+```
+```{r}
+apply(df,2, missing_empty)
+
+```
+
+
+
+
+
+
+```{r}
+#dummy_cols(df,remove_first_dummy = T)
+df <- dummy_cols(df, select_columns = "Education", remove_first_dummy = TRUE)
+df <- dummy_cols(df, select_columns = "Department", remove_first_dummy = TRUE)
+df <- dummy_cols(df, select_columns = "Gender", remove_first_dummy = TRUE)
+df <- dummy_cols(df, select_columns = "Recruitment_channel", remove_first_dummy = TRUE)
+
+```
+
+# Y-varaiable symetric or skewed
+```{r}
+hist(df$Average_training_score)
+describe(df$Average_training_score)
+
+```
+skew value is 0.45 implies right skewed
+## checking values to make y-variable symetric
+
+```{r}
+
+A= powerTransform(df$No_of_trainings~1, family = "bcPower", data =df )
+summary(A)
+```
+
+```{r}
+hist((df$Average_training_score)^(-0.7463))
+describe((df$Average_training_score)^(-0.7463))
+```
+skew value is -0.04 approximately symmetric
+
+```{r}
+Average_training_score_upd = df$Average_training_score^(-0.7463)
+```
+
+```{r}
+df <- cbind(df,Average_training_score_upd)
+apply(df[c(-1)], 2, uniqueVal)
+```
+# correlation
+```{r}
+categorical_var <- c("Employee_id", "Department", "Region", "Education", "Gender", "Recruitment_channel")
+
+numerical_var <- c("No_of_trainings", "Age", "Previous_year_rating", "Length_of_service", "KPIs_met_80", "Awards_won")
+
+dummy_var <- c("Education_Below Secondary","Education_Masters & above","Department_Finance","Department_HR","Department_Legal","Department_Operations","Department_Procurement","Department_R&D","Department_Sales & Marketing","Department_Technology","Gender_m","Recruitment_channel_referred","Recruitment_channel_sourcing","Average_training_score_upd")
+
+```
+
+
+
+```{r}
+dfcor_n <- df[, numerical_var]
+dfcor_v <- df[, dummy_var]
+```
+
+```{r}
+cor(dfcor_n)
+cor(dfcor_v)
+```
+
+```{r}
+correlationdf_n <- cor(dfcor_n)
+correlationdf_v <- cor(dfcor_v)
+
+corrplot(correlationdf_n)
+corrplot(correlationdf_v)
+```
+# scatter plots
+
+
+```{r}
+par(mfrow=c(2,3))
+plot(df$Average_training_score_upd~df$No_of_trainings,ylab="Average_training_score_upd",xlab= "No_of_trainings")
+abline(lm(df$Average_training_score_upd~df$No_of_trainings), col= 'red')
+
+plot(df$Average_training_score_upd~df$Age,ylab="Average_training_score_upd",xlab= "Age")
+abline(lm(df$Average_training_score_upd~df$Age), col= 'red')
+
+plot(df$Average_training_score_upd~df$Previous_year_rating,ylab="Average_training_score_upd",xlab= "Previous_year_rating")
+abline(lm(df$Average_training_score_upd~df$Previous_year_rating), col= 'red')
+
+plot(df$Average_training_score_upd~df$Length_of_service,ylab="Average_training_score_upd",xlab= "Length_of_service")
+abline(lm(df$Average_training_score_upd~df$Length_of_service), col= 'red')
+
+plot(df$Average_training_score_upd~df$KPIs_met_80,ylab="Average_training_score_upd",xlab= " KPIs_met_80")
+abline(lm(df$Average_training_score_upd~df$KPIs_met_80), col= 'red')
+
+plot(df$Average_training_score_upd~df$Awards_won,ylab="Average_training_score_upd",xlab= "Awards_won")
+abline(lm(df$Average_training_score_upd~df$Awards_won), col= 'red')
+
+```
+
+
+
+```{r}
+ggplot(df, aes(x = Department, fill = Department)) +
+  geom_bar() +
+  labs(title = " Departments ", x = "Categorical Variable", y = "Count") +
+  scale_fill_manual(values = brewer.pal(n = length(unique(df$Department)), name = "Set1"))
+
+```
+
+```{r}
+
+ggplot(df, aes(x = Education, fill = Education)) +
+  geom_bar() +
+  labs(title = " Education_qualification ", x = "Categorical Variable", y = "Count") +
+  scale_fill_manual(values = brewer.pal(n = length(unique(df$Education)), name = "Set3"))
+
+```
+
+
+
+
+```{r}
+
+ggplot(df, aes(x = "", fill = Gender)) +
+  geom_bar(width = 1) +
+  coord_polar(theta = "y") +
+  labs(title = "Distribution of Gender", fill = "Gender") +
+  scale_fill_manual(values = c("pink", "blue"))
+```
+
+```{r}
+ggplot(df, aes(x = Recruitment_channel, fill = Recruitment_channel)) +
+  geom_bar() +
+  labs(title = " Recruitment_channel ", x = "Categorical Variable", y = "Count") +
+  scale_fill_manual(values = brewer.pal(n = length(unique(df$Recruitment_channel)), name = "Set1"))
+
+```
+# boxplots 
+
+
+```{r}
+df$Department <- ifelse(df$Department_Finance == 1, "Finance",
+                        ifelse(df$Department_HR == 1, "HR",
+                        ifelse(df$Department_Legal == 1, "Legal",
+                        ifelse(df$Department_Operations == 1, "Operations",
+                        ifelse(df$Department_Procurement == 1, "Procurement",
+                        ifelse(df$`Department_R&D` == 1, "R&D",
+                        ifelse(df$`Department_Sales & Marketing` == 1, "Sales & Marketing",
+                        ifelse(df$Department_Technology == 1, "Technology", "Analytics"))))))))
+
+ggplot(df, aes(x = Department, y = Average_training_score_upd)) +
+  geom_boxplot() +
+  labs(title = "Box Plot of Average Training Score by Department", x = "Department", y = "Average Training Score")
+
+```
+
+```{r}
+df$Education_Level <- ifelse(df$`Education_Below Secondary` == 1, "Below Secondary",
+                          ifelse(df$`Education_Masters & above` == 1, "Masters & Above", "Bachelors"))
+
+ggplot(df, aes(x = Education_Level, y = Average_training_score_upd)) +
+  geom_boxplot() +
+  labs(title = "Box Plot of Average Training Score by Education Level", x = "Education Level", y = "Average Training Score")
+
+```
+
+```{r}
+df$Gender <- ifelse(df$Gender_m == 1, "Male", "Female")
+
+ggplot(df, aes(x = Gender, y = Average_training_score_upd)) +
+  geom_boxplot() +
+  labs(title = "Box Plot of Average Training Score by Gender", x = "Gender", y = "Average Training Score")
+
+```
+
+```{r}
+df$Recruitment_Channel <- ifelse(df$Recruitment_channel_referred == 1, "Referred",
+                                 ifelse(df$Recruitment_channel_sourcing == 1, "Sourcing", "Other"))
+
+ggplot(df, aes(x = Recruitment_Channel, y = Average_training_score_upd)) +
+  geom_boxplot() +
+  labs(title = "Box Plot of Average Training Score by Recruitment Channel", x = "Recruitment Channel", y = "Average Training Score")
+
+```
+
+
+#fit 
+```{r}
+fit = lm(df$Average_training_score_upd~df$No_of_trainings+df$Age + df$Previous_year_rating + df$Length_of_service + df$KPIs_met_80 + df$Awards_won + df$`Education_Below Secondary`+ df$`Education_Masters & above` + df$Department_Finance + df$Department_HR + df$Department_Legal + df$Department_Operations + df$Department_Operations + df$Department_Procurement + df$`Department_R&D`+ df$`Department_Sales & Marketing` + df$Department_Technology + df$Gender_m + df$Recruitment_channel_referred + df$Recruitment_channel_sourcing)
+summary(fit)
+```
+
+```{r}
+vif(fit)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#back fit
+```{r}
+step(fit, direction = "backward")
+
+```
+
+
+
+
+
+# forward
+```{r}
+null = lm(df$Average_training_score ~ 1, data=df)
+step(null, scope=list(lower=null, upper=fit), direction="forward")
+
+```
+
+# cp
+
+```{r}
+xvarlist = c("No_of_trainings", "Age","Previous_year_rating", "KPIs_met_80", "Awards_won", "Education_Below Secondary", "Education_Masters & above", "Department_Finance", "Department_HR", "Department_Legal", "Department_Operations", "Department_Procurement", "Department_Sales & Marketing", "Department_Technology", "Recruitment_channel_sourcing")
+
+    
+
+xvars = df[xvarlist]
+
+leapmodels=leaps(x=xvars, y=df$Average_training_score_upd, names=xvarlist, method="Cp")
+mat=cbind(leapmodels$size,leapmodels$which, leapmodels$Cp)
+mat[order(mat[,dim(mat)[2]]),]
+
+```
+
+# r2
+
+```{r}
+leapmodels=leaps(x=xvars, y=df$Average_training_score_upd, names=xvarlist, method="adjr2")
+mat=cbind(leapmodels$size,leapmodels$which, leapmodels$adjr2)
+mat[order(mat[,dim(mat)[2]], decreasing=T),]
+```
+
+# fit2
+
+```{r}
+fit2 = lm(formula = df$Average_training_score_upd ~ df$Previous_year_rating + 
+    df$KPIs_met_80 + df$Awards_won + df$`Education_Below Secondary` + 
+    df$`Education_Masters & above` + df$Department_Finance + 
+    df$Department_HR + df$Department_Legal + df$Department_Operations + 
+    df$Department_Procurement + df$`Department_Sales & Marketing` + 
+    df$Department_Technology + df$Recruitment_channel_sourcing)
+summary(fit2)
+```
+
+# residuals for fit model 
+
+```{r}
+plot(fitted(fit), rstandard(fit))
+abline(a=0,b=0, col= 'red')
+```
+
+```{r}
+qqnorm(rstandard(fit))
+qqline(rstandard(fit), col=2)
+```
+
+# residuals for fit2 model 
+```{r}
+plot(fitted(fit2), rstandard(fit2))
+abline(a=0,b=0, col= 'red')
+```
+
+```{r}
+qqnorm(rstandard(fit2))
+qqline(rstandard(fit2), col=2)
+```
+
+
+```{r}
+inffit2 = influence.measures(fit2)
+#summary(inffit2)
+```
+
+```{r}
+plot(rstudent(fit2)~hatvalues(fit2))
+abline(a=3, b=0, col= 'red')
+abline(a=-3, b=0, col ='red')
+```
+
+# goodness of fit test
+
+```{r}
+summary(fit2)
+```
+
+
+
+# Training and testing the model.
+## for updated Y-variable fit2 model.
+```{r}
+select.myd <- sample(1:nrow(df), 0.75*nrow(df))
+train.myd <- df[select.myd,]  
+test.myd <- df[-select.myd,]  
+```
+
+
+
+```{r}
+library(DAAG)
+fit2t = lm(formula = Average_training_score_upd ~ Previous_year_rating + 
+    KPIs_met_80 + Awards_won + `Education_Below Secondary` + 
+    `Education_Masters & above` + Department_Finance + 
+    Department_HR + Department_Legal + Department_Operations + 
+    Department_Procurement + `Department_Sales & Marketing` + 
+    Department_Technology + Recruitment_channel_sourcing,data=train.myd)
+results = cv.lm(data=df, form.lm=fit2t, m= 5, plotit = F) 
+head(results)
+```
+
+
+```{r}
+rmse_cv <- sqrt((results$Average_training_score_upd - results$cvpred)%*%(results$Average_training_score_upd - results$cvpred)/nrow(results))
+rmse_cv
+
+mae_m2<-mean(abs(results$Average_training_score_upd - results$cvpred))
+mae_m2
+
+mape_m2<-mean(abs((results$Average_training_score_upd - results$cvpred)/results$Average_training_score_upd))*100
+mape_m2
+```
+
+## for updated Y-variable fit model.
+```{r}
+select.myd <- sample(1:nrow(df), 0.75*nrow(df))
+train.myd <- df[select.myd,]  
+test.myd <- df[-select.myd,]  
+```
+
+
+```{r}
+fitt = lm(formula = Average_training_score_upd ~ No_of_trainings + Age + Length_of_service + Previous_year_rating + 
+    KPIs_met_80 + Awards_won + `Education_Below Secondary` + 
+    `Education_Masters & above` + Department_Finance + 
+    Department_HR + Department_Legal + Department_Operations + 
+    Department_Procurement + `Department_R&D` + `Department_Sales & Marketing` + 
+    Department_Technology + Gender_m + Recruitment_channel_referred + Recruitment_channel_sourcing,data=train.myd)
+results1 = cv.lm(data=df, form.lm=fitt, m= 5, plotit = F)  
+head(results1, 5)
+```
+
+
+
+```{r}
+rmse_cv <- sqrt((results1$Average_training_score_upd - results1$cvpred)%*%(results1$Average_training_score_upd - results1$cvpred)/nrow(results1))
+rmse_cv
+
+mae_m2<-mean(abs(results1$Average_training_score_upd - results1$cvpred))
+mae_m2
+
+mape_m2<-mean(abs((results1$Average_training_score_upd - results1$cvpred)/results1$Average_training_score_upd))*100
+mape_m2
+
+
+```
+
+
+
+## for Oringinal Y-variable fit model.
+```{r}
+select.myd <- sample(1:nrow(df), 0.75*nrow(df))
+train.myd <- df[select.myd,]  
+test.myd <- df[-select.myd,]  
+```
+
+
+```{r}
+fitOt = lm(formula = Average_training_score ~ No_of_trainings + Age + Length_of_service + Previous_year_rating + 
+    KPIs_met_80 + Awards_won + `Education_Below Secondary` + 
+    `Education_Masters & above` + Department_Finance + 
+    Department_HR + Department_Legal + Department_Operations + 
+    Department_Procurement + `Department_R&D` + `Department_Sales & Marketing` + 
+    Department_Technology + Gender_m + Recruitment_channel_referred + Recruitment_channel_sourcing,data=train.myd)
+resultsO = cv.lm(data=df, form.lm=fitOt, m= 5, plotit = F)  
+head(resultsO)
+```
+
+
+```{r}
+rmse_cv <- sqrt((resultsO$Average_training_score - resultsO$cvpred)%*%(resultsO$Average_training_score - resultsO$cvpred)/nrow(resultsO))
+rmse_cv
+
+
+mae_m2<-mean(abs(resultsO$Average_training_score_upd - resultsO$cvpred))
+mae_m2
+
+mape_m2<-mean(abs((resultsO$Average_training_score_upd - resultsO$cvpred)/resultsO$Average_training_score_upd))*100
+mape_m2
+
+```
